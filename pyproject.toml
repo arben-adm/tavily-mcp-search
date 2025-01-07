@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-tavily-search"
+version = "0.1.0"
+description = "MCP Tavily Search Agent"
+authors = [{name = "Arben Ademi", email = "arben.ademi@tuta.io"}]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=1.2.0",
+    "httpx",
+    "python-dotenv",
+]
+
+[project.scripts]
+mcp-tavily-search = "mcp_tavily_search.server:main"
