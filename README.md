@@ -127,8 +127,9 @@ Common issues and solutions:
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
-This project is licensed under the [MIT License](https://mit-license.org/).
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
 
 ## Acknowledgments
 
