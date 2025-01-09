@@ -21,7 +21,7 @@ A sophisticated Model Context Protocol (MCP) server that provides comprehensive 
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/yourusername/tavily-mcp-search.git
+   git clone https://github.com/arben-adm/mcp-sequential-thinking.git
    cd tavily-mcp-search
    ```
 
