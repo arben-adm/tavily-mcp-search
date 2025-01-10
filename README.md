@@ -2,6 +2,8 @@
 
 A sophisticated Model Context Protocol (MCP) server that provides comprehensive multi-topic search capabilities powered by the Tavily API. This agent enables intelligent information gathering across business, news, finance, and politics domains with a focus on high-quality, reliable sources.
 
+<a href="https://glama.ai/mcp/servers/p0w4whs3l4"><img width="380" height="200" src="https://glama.ai/mcp/servers/p0w4whs3l4/badge" alt="Tavily Search Agent MCP server" /></a>
+
 ## Features
 
 - 🔍 **Multi-Topic Search**: Specialized search configurations for business, news, finance, and politics
