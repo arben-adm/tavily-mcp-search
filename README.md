@@ -21,7 +21,7 @@ A sophisticated Model Context Protocol (MCP) server that provides comprehensive 
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/arben-adm/mcp-sequential-thinking.git
+   git clone https://github.com/arben-adm/tavily-mcp-search.git
    cd tavily-mcp-search
    ```
 
@@ -31,24 +31,14 @@ A sophisticated Model Context Protocol (MCP) server that provides comprehensive 
    uv venv
    
    # Windows
-   .venv\Scripts\Activate.ps1
+   .venv\Scripts\Activate
    # macOS/Linux
    source .venv/bin/activate
    ```
 
 3. **Install Dependencies**
    ```bash
-   uv pip install mcp>=1.2.0 httpx python-dotenv
    uv pip install -e .
-   ```
-
-4. **Configure Environment**
-   ```bash
-   # Windows
-   Set-Content -Path ".env" -Value "TAVILY_API_KEY=your-api-key-here" -Encoding UTF8
-   
-   # macOS/Linux
-   echo "TAVILY_API_KEY=your-api-key-here" > .env
    ```
 
 ## Usage
@@ -66,11 +56,41 @@ A sophisticated Model Context Protocol (MCP) server that provides comprehensive 
 ### Integration with Claude Desktop
 
 1. Add the following to your Claude Desktop configuration file (`%APPDATA%\Claude\claude_desktop_config.json` on Windows):
+
+   **Option 1: Using virtual environment**
    ```json
    {
      "mcpServers": {
        "tavily-search": {
          "command": "PATH_TO_YOUR_VENV\\Scripts\\mcp-tavily-search.exe",
+         "env": {
+           "TAVILY_API_KEY": "your-api-key-here"
+         }
+       }
+     }
+   }
+   ```
+
+   **Option 2: Using uv directly**
+   ```json
+   {
+     "mcpServers": {
+       "tavily-search": {
+         "command": "uv pip run mcp-tavily-search",
+         "env": {
+           "TAVILY_API_KEY": "your-api-key-here"
+         }
+       }
+     }
+   }
+   ```
+
+   **Option 3: After publishing to PyPI**
+   ```json
+   {
+     "mcpServers": {
+       "tavily-search": {
+         "package": "mcp-tavily-search",
          "env": {
            "TAVILY_API_KEY": "your-api-key-here"
          }
