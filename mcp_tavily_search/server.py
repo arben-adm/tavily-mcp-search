@@ -17,7 +17,7 @@ TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 TAVILY_BASE_URL = "https://api.tavily.com/search"
 MIN_SEARCH_RESULTS = 8
 MAX_RETRIES = 3
-TIMEOUT = 30.0  # seconds
+TIMEOUT = 120.0  # seconds
 
 @dataclass
 class SearchConfig:
