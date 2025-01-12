@@ -1,178 +1,220 @@
-from typing import List, Dict, Any, Optional
-import os
-import httpx
+from typing import Optional, Dict, Any
 import asyncio
-from dataclasses import dataclass
+import httpx
+import logging
+import time
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
 from mcp.server.fastmcp import FastMCP
 from dotenv import load_dotenv
+import os
+import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
-# Load environment variables
+# Logging and Environment Variables Setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 load_dotenv()
 
-# Initialize FastMCP server
-mcp = FastMCP("tavily-search")
-
-# Constants
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
-TAVILY_BASE_URL = "https://api.tavily.com/search"
-MIN_SEARCH_RESULTS = 8
-MAX_RETRIES = 3
-TIMEOUT = 120.0  # seconds
+class ConnectionState(Enum):
+    CONNECTING = "connecting"
+    CONNECTED = "connected"
+    DISCONNECTED = "disconnected"
+    ERROR = "error"
 
 @dataclass
-class SearchConfig:
-    """Search configuration for different topic areas"""
-    search_depth: str
-    topic: str
-    days: int = 3
-    max_results: int = 10
-    include_answer: bool = True
-
-# Define search configurations for different topics
-TOPIC_CONFIGS = {
-    "business": SearchConfig("advanced", "general", max_results=12),
-    "news": SearchConfig("basic", "news", days=1, max_results=10),
-    "finance": SearchConfig("advanced", "general", max_results=12),
-    "politics": SearchConfig("basic", "news", days=2, max_results=10),
-}
-
-def sanitize_query(query: str) -> str:
-    """Sanitize the search query."""
-    if not query or not isinstance(query, str):
-        raise ValueError("Invalid query provided")
-    return query.strip()
-
-async def execute_tavily_search(query: str, config: SearchConfig, retry_count: int = 0) -> Dict[str, Any]:
-    """Execute a search using the Tavily API with retry logic"""
-    if not TAVILY_API_KEY:
-        raise ValueError("TAVILY_API_KEY not found in environment variables")
-
-    sanitized_query = sanitize_query(query)
+class ConnectionManager:
+    state: ConnectionState = ConnectionState.DISCONNECTED
+    last_health_check: datetime = field(default_factory=datetime.now)
+    error_count: int = 0
+    max_errors: int = 3
+    health_check_interval: timedelta = field(default_factory=lambda: timedelta(seconds=30))
     
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-        payload = {
-            "api_key": TAVILY_API_KEY,
-            "query": sanitized_query,
-            "search_depth": config.search_depth,
-            "topic": config.topic,
-            "days": config.days,
-            "max_results": config.max_results,
-            "include_answer": config.include_answer
-        }
+    def is_healthy(self) -> bool:
+        return (
+            self.state == ConnectionState.CONNECTED 
+            and self.error_count < self.max_errors
+            and datetime.now() - self.last_health_check < self.health_check_interval
+        )
 
+    def record_error(self) -> None:
+        self.error_count += 1
+        if self.error_count >= self.max_errors:
+            self.state = ConnectionState.ERROR
+            logger.error("Too many errors occurred, marking connection as unhealthy")
+
+    def record_success(self) -> None:
+        self.error_count = 0
+        self.last_health_check = datetime.now()
+        self.state = ConnectionState.CONNECTED
+
+@dataclass
+class RequestQueue:
+    """Manages concurrent requests with rate-limiting"""
+    max_concurrent: int = 5
+    queue: asyncio.Queue = field(default_factory=asyncio.Queue)
+    active_requests: int = 0
+    semaphore: asyncio.Semaphore = field(default_factory=lambda: asyncio.Semaphore(5))
+    
+    async def add_request(self, coro):
+        await self.queue.put(coro)
+        asyncio.create_task(self._process_queue())
+    
+    async def _process_queue(self):
+        if self.active_requests >= self.max_concurrent:
+            return
+            
+        async with self.semaphore:
+            self.active_requests += 1
+            try:
+                coro = await self.queue.get()
+                await coro
+            finally:
+                self.active_requests -= 1
+                self.queue.task_done()
+
+class RobustMCPServer:
+    def __init__(self, name: str, api_key: str):
+        self.mcp = FastMCP(name)
+        self.api_key = api_key
+        self.conn_manager = ConnectionManager()
+        self.request_queue = RequestQueue()
+        self.shutdown_event = asyncio.Event()
+        
+        self.timeout = httpx.Timeout(30.0, connect=10.0)
+        self.max_retries = 3
+        self.base_backoff = 1.0
+        
+        self.health_check_thread = None
+        
+        self._register_handlers()
+        
+    def _register_handlers(self):
+        @self.mcp.tool()
+        async def comprehensive_search(query: str) -> str:
+            return await self._handle_search(query)
+
+    def start(self):  # Changed to sync method
+        """Start the server with Health Monitoring"""
         try:
-            response = await client.post(TAVILY_BASE_URL, json=payload)
-            response.raise_for_status()
-            data = response.json()
+            logger.info("Starting MCP server...")
+            self.conn_manager.state = ConnectionState.CONNECTING
             
-            # Validate response structure
-            if "results" not in data:
-                raise ValueError("Invalid API response structure")
-                
-            return data
-
-        except httpx.TimeoutException:
-            if retry_count < MAX_RETRIES:
-                await asyncio.sleep(1 * (retry_count + 1))  # Exponential backoff
-                return await execute_tavily_search(query, config, retry_count + 1)
-            raise ValueError(f"Timeout after {MAX_RETRIES} retries")
-
-        except httpx.HTTPStatusError as e:
-            error_msg = f"HTTP error occurred: {e.response.status_code}"
-            if e.response.status_code == 401:
-                error_msg = "Invalid API key"
-            elif e.response.status_code == 429:
-                error_msg = "Rate limit exceeded"
-            raise ValueError(error_msg)
-
-        except Exception as e:
-            raise ValueError(f"Error executing search: {str(e)}")
-
-async def combine_search_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Combine and deduplicate search results from multiple searches"""
-    seen_urls = set()
-    combined_results = []
-    
-    for result in results:
-        if not isinstance(result, dict) or "results" not in result:
-            continue
-            
-        for item in result.get("results", []):
-            if not isinstance(item, dict) or "url" not in item:
-                continue
-                
-            if item["url"] not in seen_urls and len(seen_urls) < MIN_SEARCH_RESULTS:
-                seen_urls.add(item["url"])
-                combined_results.append(item)
-    
-    # Ensure we have minimum required results
-    if not combined_results:
-        raise ValueError("No valid results found")
-        
-    return {
-        "results": combined_results,
-        "answer": "\n\n".join(r.get("answer", "") for r in results if isinstance(r, dict) and r.get("answer")),
-    }
-
-@mcp.tool()
-async def comprehensive_search(query: str) -> str:
-    """
-    Perform a comprehensive search across multiple topics using Tavily.
-    
-    Args:
-        query: The search query to research
-    """
-    try:
-        # Validate and sanitize input
-        sanitized_query = sanitize_query(query)
-        
-        # Execute searches for each topic in parallel
-        search_tasks = [
-            execute_tavily_search(f"{sanitized_query} {topic}", config)
-            for topic, config in TOPIC_CONFIGS.items()
-        ]
-        
-        search_results = await asyncio.gather(*search_tasks, return_exceptions=True)
-        
-        # Filter out failed searches
-        valid_results = [
-            result for result in search_results 
-            if isinstance(result, dict) and not isinstance(result, Exception)
-        ]
-        
-        if not valid_results:
-            return "Error: No valid search results found. Please try again."
-            
-        combined_results = await combine_search_results(valid_results)
-        
-        # Format the response
-        response_parts = ["## Research Results\n"]
-        
-        if combined_results.get("answer"):
-            response_parts.append(f"### Summary\n{combined_results['answer']}\n")
-        
-        response_parts.append("### Detailed Sources")
-        
-        for idx, result in enumerate(combined_results["results"], 1):
-            title = result.get("title", "No Title")
-            url = result.get("url", "#")
-            content = result.get("content", "No content available")
-            
-            response_parts.append(
-                f"{idx}. [{title}]({url})\n"
-                f"   - {content[:300]}...\n"
+            # Start health check in separate thread
+            self.health_check_thread = threading.Thread(
+                target=self._run_health_check,
+                daemon=True
             )
-        
-        return "\n".join(response_parts)
-        
-    except ValueError as ve:
-        return f"Error: {str(ve)}"
-    except Exception as e:
-        return f"An unexpected error occurred: {str(e)}"
+            self.health_check_thread.start()
+            
+            # Run MCP server synchronously
+            self.mcp.run(transport='stdio')
+            
+        except Exception as e:
+            logger.error(f"Server startup error: {str(e)}")
+            self.conn_manager.state = ConnectionState.ERROR
+            raise
 
-def main():
-    """Entry point for the MCP server."""
-    mcp.run(transport='stdio')
+    def _run_health_check(self):
+        """Run health check in separate thread"""
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(self._health_check())
+        finally:
+            loop.close()
+
+    async def shutdown(self):
+        """Cleanup resources"""
+        self.shutdown_event.set()
+        self.conn_manager.state = ConnectionState.DISCONNECTED
+        
+    async def _health_check(self):
+        while not self.shutdown_event.is_set():
+            try:
+                if not self.conn_manager.is_healthy():
+                    logger.warning("Health check failed, attempting recovery...")
+                await asyncio.sleep(30)
+            except Exception as e:
+                logger.error(f"Health check error: {str(e)}")
+                await asyncio.sleep(5)
+
+    async def _handle_search(self, query: str) -> str:
+        """Behandle Suchanfragen mit Fehlerbehandlung."""
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                # Wrap the search in a coroutine
+                search_coro = self._execute_with_retry(
+                    self._perform_search,
+                    client,
+                    query
+                )
+                # Add to request queue
+                await self.request_queue.add_request(search_coro)
+                response = await search_coro
+                self.conn_manager.record_success()
+                return self._format_response(response)
+        except Exception as e:
+            error_msg = f"Search error: {str(e)}"
+            logger.error(error_msg)
+            return error_msg
+
+    async def _perform_search(self, client: httpx.AsyncClient, query: str) -> Dict[str, Any]:
+        """Führe die eigentliche Suchanfrage durch."""
+        payload = {
+            "api_key": self.api_key,
+            "query": query
+        }
+        
+        response = await client.post(
+            "https://api.tavily.com/search",
+            json=payload
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def _execute_with_retry(self, func, *args, **kwargs):
+        """Execute with retry logic"""
+        for attempt in range(self.max_retries):
+            try:
+                return await func(*args, **kwargs)
+            except Exception as e:
+                if attempt == self.max_retries - 1:
+                    raise
+                wait_time = self.base_backoff * (2 ** attempt)
+                logger.warning(f"Attempt {attempt + 1} failed, retrying in {wait_time}s: {str(e)}")
+                await asyncio.sleep(wait_time)
+
+    def _format_response(self, data: Dict[str, Any]) -> str:
+        """Formatiere die Suchergebnisse."""
+        try:
+            results = data.get("results", [])
+            if not results:
+                return "No results found."
+                
+            formatted = ["## Search Results\n"]
+            for idx, result in enumerate(results, 1):
+                formatted.extend([
+                    f"{idx}. {result.get('title', 'No Title')}",
+                    f"   URL: {result.get('url', '#')}",
+                    f"   {result.get('content', 'No content available')[:300]}...\n"
+                ])
+                
+            return "\n".join(formatted)
+        except Exception as e:
+            logger.error(f"Error formatting response: {str(e)}")
+            return "Error formatting search results."
 
 if __name__ == "__main__":
-    main()
+    api_key = os.getenv("TAVILY_API_KEY")
+    if not api_key:
+        raise ValueError("TAVILY_API_KEY environment variable is required")
+
+    server = RobustMCPServer("tavily-search", api_key)
+    try:
+        server.start()  # Now synchronous call
+    except Exception as e:
+        logger.error(f"Fatal error: {str(e)}")
+        sys.exit(1)
