@@ -1,76 +1,69 @@
-# Tavily Search MCP Agent
+# 🔍 Tavily Search MCP Agent
 
-Transform your search capabilities with an intelligent Model Context Protocol (MCP) server powered by the Tavily API. Get high-quality, reliable information across business, news, finance, and politics domains, all through a robust and developer-friendly interface.
+A powerful Model Context Protocol (MCP) Server powered by the Tavily API. Get high-quality, reliable information from business, news, finance, and politics - all through a robust and developer-friendly interface.
 
-<a href="https://glama.ai/mcp/servers/p0w4whs3l4"><img width="380" height="200" src="https://glama.ai/mcp/servers/p0w4whs3l4/badge" alt="Tavily Search Agent MCP server" /></a>
+[![Tavily Search Agent MCP Server](https://glama.ai/mcp/servers/p0w4whs3l4/badge)](https://glama.ai/mcp/servers/p0w4whs3l4)
 
-## Why Choose Tavily Search MCP?
+## 🌟 Why Tavily Search MCP?
 
-In today's fast-paced digital landscape, getting accurate information quickly is crucial. Tavily Search MCP stands out by offering:
+In today's fast-paced digital landscape, quick access to precise information is crucial. Tavily Search MCP excels with:
 
-- Lightning-fast search responses with intelligent caching
-- Built-in resilience with automatic retries and health monitoring
-- Smart request queuing for optimal performance
-- Clean, parsed results ready for integration
-- Enterprise-grade rate limiting and resource management
+⚡️ Lightning-fast async search responses  
+🛡️ Built-in fault tolerance with automatic retries  
+🎯 Clean, markdown-formatted results  
+🔍 Smart content snippets  
+🛠️ Comprehensive error handling
 
-## Quick Start
+## 🚀 Quick Start
 
 Get up and running in minutes:
 
 ```bash
-# Create your environment
-uv venv && source .venv/bin/activate  # Unix/MacOS
-# or
+# 1. Create environment
 uv venv && .venv\Scripts\activate     # Windows
+# OR
+uv venv && source .venv/bin/activate  # Unix/MacOS
 
-# Install dependencies
+# 2. Install dependencies
 uv pip install -e .
 
-# Set up your config
-echo "TAVILY_API_KEY=your-key-here" > .env
+# 3. Set up configuration
+echo TAVILY_API_KEY=your-key-here > .env
 
-# Launch the server
+# 4. Start server
 cd mcp_tavily_search && uv run server.py
 ```
 
-## Core Features
+## 💡 Core Features
 
-We've built Tavily Search MCP with modern development practices in mind:
+### ⚡️ Performance & Reliability
+- Asynchronous request handling
+- Built-in error handling and automatic retries
+- Configurable request timeouts
+- Comprehensive logging system
 
-### Performance Optimization
-The server handles concurrent requests efficiently through:
-- Intelligent request queuing (max 5 concurrent requests)
-- 30-second request timeouts with automatic retries
-- Exponential backoff for failed requests
-- Background health checks every 30 seconds
+### 🎯 Search Configuration
+- Configurable search depth (basic/advanced)
+- Adjustable result limits (1-20 results)
+- Clean markdown-formatted output
+- Snippet previews with source URLs
 
-### Topic-Specific Search Configurations
+### 🛡️ Error Handling
+- API authentication validation
+- Rate limit detection
+- Network error recovery
+- Request timeout management
 
-Each search domain is optimized for its specific use case:
-
-**Business & Finance**
-Experience deep insights with:
-- Advanced search depth for comprehensive results
-- 12 curated results per query
-- Standard refresh intervals for accuracy
-
-**News & Politics**
-Stay current with:
-- Streamlined search depth for quick updates
-- 10 focused results per query
-- 24-48 hour refresh cycles for timely information
-
-## Developer Integration
+## 🛠️ Developer Integration
 
 ### Prerequisites
-- Python 3.11+
-- UV package manager ([Installation Guide](https://github.com/astral-sh/uv))
-- Tavily API key ([Get Yours](https://tavily.com))
+- Python 3.11 or higher
+- UV Package Manager ([Installation Guide](https://github.com/astral-sh/uv))
+- Tavily API key ([Get one here](https://tavily.com))
 
-### Claude Desktop Integration
+### Claude Desktop Setup
 
-Enhance your Claude Desktop experience by adding this to your configuration:
+Optimize your Claude Desktop experience with this configuration:
 
 ```json
 {
@@ -84,14 +77,14 @@ Enhance your Claude Desktop experience by adding this to your configuration:
         "server.py"
       ],
       "env": {
-        "TAVILY_API_KEY": "your-key-here"
+        "TAVILY_API_KEY": "YOUR-API-KEY"
       }
     }
   }
 }
 ```
 
-Configuration path:
+📁 Configuration paths:
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 - Unix/MacOS: `~/.config/Claude/claude_desktop_config.json`
 
@@ -103,11 +96,25 @@ Our clean, modular structure makes development a breeze:
 mcp-tavily-search/
 ├── mcp_tavily_search/     # Core package
 │   ├── server.py          # Server implementation
+│   ├── client.py          # Tavily API client
 │   └── __init__.py        # Package initialization
 ├── .env                   # Environment configuration
 ├── README.md             # Documentation
 └── pyproject.toml        # Project configuration
 ```
+
+## Key Components
+
+### Server (server.py)
+- MCP protocol implementation
+- Request handling and routing
+- Error recovery and health monitoring
+
+### Client (client.py)
+- Tavily API integration
+- Retry mechanism with exponential backoff
+- Result formatting and processing
+- Error handling and logging
 
 ## Troubleshooting Guide
 
@@ -133,20 +140,17 @@ If you're experiencing API issues:
 
 ## Community and Support
 
-We believe in the power of community:
-
 - Report issues and contribute on GitHub
-- Join discussions in the [Tavily API Forum](https://tavily.com/forum)
 - Share your implementations and improvements
+- Join our discussions and help others
 
 ## Security and Best Practices
 
-We take security seriously. The server implements:
+Security is paramount. The server implements:
 
 - Secure API key handling through environment variables
-- Request rate limiting to prevent API abuse
 - Automatic request timeout management
-- Error tracking and logging
+- Comprehensive error tracking and logging
 
 ## License
 
@@ -154,13 +158,6 @@ This project is licensed under MIT. See the LICENSE file for details.
 
 ## Acknowledgments
 
-Built with support from:
+Special thanks to:
 - The innovative Tavily API team
-- Model Context Protocol framework developers
-- Claude Desktop integration team
-- Our vibrant community of contributors
-
----
-*Last Updated: January 2025*
-
-Made with ♥️ by the Tavily Search MCP team
+- The MCP protocol community

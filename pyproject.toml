@@ -13,6 +13,7 @@ dependencies = [
     "mcp>=1.2.0",
     "httpx",
     "python-dotenv",
+    "tavily-python",
 ]
 
 [project.scripts]

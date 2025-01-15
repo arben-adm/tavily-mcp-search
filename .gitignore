@@ -6,3 +6,6 @@ __pycache__/server.cpython-*.pyc
 *.pyd
 *$py.class
 *server.cpython*
+.aider*
+mcp_tavily_search/__pycache__/__init__.cpython-312.pyc
+
