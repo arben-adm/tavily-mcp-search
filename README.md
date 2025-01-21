@@ -1,14 +1,14 @@
-# 🔍 Tavily Search MCP Agent
+# 🔍 My Tavily Search MCP Agent
 
-A powerful Model Context Protocol (MCP) Server powered by the Tavily API. Get high-quality, reliable information from business, news, finance, and politics - all through a robust and developer-friendly interface.
+I've created a powerful Model Context Protocol (MCP) Server powered by the Tavily API. With this, you can get high-quality, reliable information from business, news, finance, and politics - all through a robust and developer-friendly interface.
 
 [![Tavily Search Agent MCP Server](https://glama.ai/mcp/servers/p0w4whs3l4/badge)](https://glama.ai/mcp/servers/p0w4whs3l4)
 [![CI](https://github.com/your-username/mcp-tavily-search/workflows/CI/badge.svg)](https://github.com/your-username/mcp-tavily-search/actions)
 [![codecov](https://codecov.io/gh/your-username/mcp-tavily-search/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/mcp-tavily-search)
 
-## 🌟 Why Tavily Search MCP?
+## 🌟 Why I Built Tavily Search MCP
 
-In today's fast-paced digital landscape, quick access to precise information is crucial. Tavily Search MCP excels with:
+In today's fast-paced digital landscape, I recognized the need for quick access to precise information. I needed a web search tool that works with my sequential thinking MCP server. That's why I developed Tavily Search MCP, which excels with:
 
 ⚡️ Lightning-fast async search responses  
 🛡️ Built-in fault tolerance with automatic retries  
@@ -20,7 +20,7 @@ In today's fast-paced digital landscape, quick access to precise information is 
 
 ## 🚀 Quick Start
 
-Get up and running in minutes:
+Here's how you can get up and running with my project in minutes:
 
 ```bash
 # 1. Create environment
@@ -41,13 +41,13 @@ cd mcp_tavily_search && uv run server.py
 ## 💡 Core Features
 
 ### ⚡️ Performance & Reliability
-- Asynchronous request handling
+- I've implemented asynchronous request handling
 - Built-in error handling and automatic retries
 - Configurable request timeouts
 - Comprehensive logging system
 
 ### 🎯 Search Configuration
-- Configurable search depth (basic/advanced)
+- I've made the search depth configurable (basic/advanced)
 - Adjustable result limits (1-20 results)
 - Clean markdown-formatted output
 - Snippet previews with source URLs
@@ -69,7 +69,7 @@ cd mcp_tavily_search && uv run server.py
 
 ### Claude Desktop Setup
 
-Optimize your Claude Desktop experience with this configuration:
+I've optimized the Claude Desktop experience with this configuration:
 
 ```json
 {
@@ -96,13 +96,15 @@ Optimize your Claude Desktop experience with this configuration:
 
 ## Project Architecture
 
-Our clean, modular structure makes development a breeze:
+I've designed a clean, modular structure to make development a breeze:
 
 ```
 mcp-tavily-search/
 ├── mcp_tavily_search/     # Core package
 │   ├── server.py          # Server implementation
 │   ├── client.py          # Tavily API client
+│   ├── test_server.py     # Server tests
+│   ├── test_client.py     # Client tests
 │   └── __init__.py        # Package initialization
 ├── .env                   # Environment configuration
 ├── README.md              # Documentation
@@ -112,7 +114,7 @@ mcp-tavily-search/
 ## Key Components
 
 ### Server (server.py)
-- MCP protocol implementation
+- I've implemented the MCP protocol
 - Request handling and routing
 - Error recovery and health monitoring
 
@@ -122,9 +124,13 @@ mcp-tavily-search/
 - Result formatting and processing
 - Error handling and logging
 
+### Tests (test_server.py and test_client.py)
+- Comprehensive unit tests for both server and client
+- Ensures reliability and correctness of the implementation
+
 ## Usage Examples
 
-Here are some examples of how to use the enhanced search capabilities:
+Here are some examples of how to use the enhanced search capabilities I've implemented:
 
 1. Basic search:
 ```json
@@ -176,7 +182,7 @@ Here are some examples of how to use the enhanced search capabilities:
 ## Troubleshooting Guide
 
 ### Connection Issues
-When things don't work as expected, follow these steps:
+If things don't work as expected, follow these steps I've outlined:
 
 1. Verify your configuration paths
 2. Check the Claude Desktop logs:
@@ -209,17 +215,17 @@ To run the unit tests for this project, follow these steps:
    pytest mcp_tavily_search
    ```
 
-This will run all the tests in the `mcp_tavily_search` directory, including the ones we've added in `test_client.py`.
+This will run all the tests in the `mcp_tavily_search` directory, including both `test_client.py` and `test_server.py`.
 
 ## Community and Support
 
-- Report issues and contribute on GitHub
+- I encourage you to report issues and contribute on GitHub
 - Share your implementations and improvements
 - Join our discussions and help others
 
 ## Security and Best Practices
 
-Security is paramount. The server implements:
+Security is paramount in my implementation. The server includes:
 
 - Secure API key handling through environment variables
 - Automatic request timeout management
@@ -227,10 +233,10 @@ Security is paramount. The server implements:
 
 ## License
 
-This project is licensed under MIT. See the LICENSE file for details.
+I've licensed this project under MIT. See the LICENSE file for details.
 
 ## Acknowledgments
 
-Special thanks to:
+I'd like to give special thanks to:
 - The innovative Tavily API team
 - The MCP protocol community
