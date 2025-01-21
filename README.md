@@ -3,6 +3,8 @@
 A powerful Model Context Protocol (MCP) Server powered by the Tavily API. Get high-quality, reliable information from business, news, finance, and politics - all through a robust and developer-friendly interface.
 
 [![Tavily Search Agent MCP Server](https://glama.ai/mcp/servers/p0w4whs3l4/badge)](https://glama.ai/mcp/servers/p0w4whs3l4)
+[![CI](https://github.com/your-username/mcp-tavily-search/workflows/CI/badge.svg)](https://github.com/your-username/mcp-tavily-search/actions)
+[![codecov](https://codecov.io/gh/your-username/mcp-tavily-search/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/mcp-tavily-search)
 
 ## 🌟 Why Tavily Search MCP?
 
@@ -12,7 +14,9 @@ In today's fast-paced digital landscape, quick access to precise information is 
 🛡️ Built-in fault tolerance with automatic retries  
 🎯 Clean, markdown-formatted results  
 🔍 Smart content snippets  
-🛠️ Comprehensive error handling
+🛠️ Comprehensive error handling  
+🖼️ Optional image results  
+📰 Specialized news search
 
 ## 🚀 Quick Start
 
@@ -47,6 +51,8 @@ cd mcp_tavily_search && uv run server.py
 - Adjustable result limits (1-20 results)
 - Clean markdown-formatted output
 - Snippet previews with source URLs
+- Optional image results
+- Specialized news search topic
 
 ### 🛡️ Error Handling
 - API authentication validation
@@ -99,8 +105,8 @@ mcp-tavily-search/
 │   ├── client.py          # Tavily API client
 │   └── __init__.py        # Package initialization
 ├── .env                   # Environment configuration
-├── README.md             # Documentation
-└── pyproject.toml        # Project configuration
+├── README.md              # Documentation
+└── pyproject.toml         # Project configuration
 ```
 
 ## Key Components
@@ -115,6 +121,57 @@ mcp-tavily-search/
 - Retry mechanism with exponential backoff
 - Result formatting and processing
 - Error handling and logging
+
+## Usage Examples
+
+Here are some examples of how to use the enhanced search capabilities:
+
+1. Basic search:
+```json
+{
+  "name": "search",
+  "arguments": {
+    "query": "Latest news on artificial intelligence"
+  }
+}
+```
+
+2. Advanced search with images:
+```json
+{
+  "name": "search",
+  "arguments": {
+    "query": "Elon Musk SpaceX achievements",
+    "search_depth": "advanced",
+    "include_images": true,
+    "max_results": 10
+  }
+}
+```
+
+3. News-specific search:
+```json
+{
+  "name": "search",
+  "arguments": {
+    "query": "Climate change impact on agriculture",
+    "topic": "news",
+    "max_results": 5
+  }
+}
+```
+
+4. Search with raw content:
+```json
+{
+  "name": "search",
+  "arguments": {
+    "query": "Python programming best practices",
+    "include_raw_content": true,
+    "max_results": 3
+  }
+}
+```
 
 ## Troubleshooting Guide
 
@@ -137,6 +194,22 @@ If you're experiencing API issues:
 1. Validate your API key permissions
 2. Check your network connection
 3. Monitor the API response in the server logs
+
+## Running Tests
+
+To run the unit tests for this project, follow these steps:
+
+1. Install the development dependencies:
+   ```bash
+   uv pip install -e ".[dev]"
+   ```
+
+2. Run the tests using pytest:
+   ```bash
+   pytest mcp_tavily_search
+   ```
+
+This will run all the tests in the `mcp_tavily_search` directory, including the ones we've added in `test_client.py`.
 
 ## Community and Support
 

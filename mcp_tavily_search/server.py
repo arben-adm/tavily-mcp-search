@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import sys
 from datetime import datetime
 from collections.abc import Sequence
 from typing import Any, Optional
@@ -16,6 +17,12 @@ from mcp.types import (
     EmptyResult
 )
 from pydantic import AnyUrl
+
+# Force UTF-8 encoding for stdout
+if sys.platform.startswith('win'):
+    import locale
+    sys.stdout.reconfigure(encoding='utf-8')
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 # Configure logging
 logging.basicConfig(
@@ -68,7 +75,29 @@ async def list_tools() -> list[Tool]:
                     "search_depth": {
                         "type": "string",
                         "description": "Search depth (basic or advanced)",
-                        "enum": ["basic", "advanced"]
+                        "enum": ["basic", "advanced"],
+                        "default": "advanced"
+                    },
+                    "topic": {
+                        "type": "string",
+                        "description": "Search topic (general or news)",
+                        "enum": ["general", "news"],
+                        "default": "general"
+                    },
+                    "max_results": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return",
+                        "default": 5
+                    },
+                    "include_images": {
+                        "type": "boolean",
+                        "description": "Include images in the results",
+                        "default": False
+                    },
+                    "include_raw_content": {
+                        "type": "boolean",
+                        "description": "Include raw content in the results",
+                        "default": False
                     }
                 },
                 "required": ["query"]
@@ -79,30 +108,50 @@ async def list_tools() -> list[Tool]:
 
 async def process_search_results(results: dict) -> TextContent:
     """Process search results into TextContent"""
-    if not results:
+    try:
+        if not results:
+            return TextContent(
+                type="text",
+                text="No results found for your query."
+            )
+
+        response_text = []
+        
+        if 'answer' in results and results['answer']:
+            response_text.append("AI Answer:")
+            response_text.append(results['answer'])
+            response_text.append("\n")
+
+        if 'results' in results and results['results']:
+            response_text.append("Search Results:")
+            for i, result in enumerate(results['results'], 1):
+                title = result.get('title', 'No title')
+                url = result.get('url', 'No URL')
+                content = result.get('content', 'No content')
+                
+                response_text.append(f"\n{i}. {title}")
+                response_text.append(f"URL: {url}")
+                response_text.append(f"Summary: {content}\n")
+
+        if 'images' in results and results['images']:
+            response_text.append("\nRelated Images:")
+            for image in results['images']:
+                if isinstance(image, dict):
+                    response_text.append(f"URL: {image['url']}")
+                    response_text.append(f"Description: {image['description']}\n")
+                else:
+                    response_text.append(f"URL: {image}\n")
+
         return TextContent(
             type="text",
-            text="No results found for your query."
+            text="\n".join(response_text) if response_text else "No relevant information found."
         )
-
-    response_text = []
-    
-    if 'answer' in results and results['answer']:
-        response_text.append("AI Answer:")
-        response_text.append(results['answer'])
-        response_text.append("\n")
-
-    if 'results' in results and results['results']:
-        response_text.append("Search Results:")
-        for i, result in enumerate(results['results'], 1):
-            response_text.append(f"\n{i}. {result.get('title', 'No title')}")
-            response_text.append(f"URL: {result.get('url', 'No URL')}")
-            response_text.append(f"Summary: {result.get('snippet', 'No summary')}\n")
-
-    return TextContent(
-        type="text",
-        text="\n".join(response_text) if response_text else "No relevant information found."
-    )
+    except Exception as e:
+        logger.error(f"Error processing search results: {str(e)}")
+        return TextContent(
+            type="text",
+            text="Error processing search results. Please try again."
+        )
 
 @app.call_tool()
 async def call_tool(name: str, arguments: Any) -> Sequence[TextContent]:
@@ -124,14 +173,20 @@ async def call_tool(name: str, arguments: Any) -> Sequence[TextContent]:
     try:
         client = AsyncTavilyClient(API_KEY)
         query = arguments["query"]
-        search_depth = arguments.get("search_depth", "basic")
+        search_depth = arguments.get("search_depth", "advanced")
+        topic = arguments.get("topic", "general")
+        max_results = arguments.get("max_results", 5)
+        include_images = arguments.get("include_images", False)
+        include_raw_content = arguments.get("include_raw_content", False)
         
         results = await client.search(
             query=query,
             search_depth=search_depth,
-            include_images=False,
+            topic=topic,
+            max_results=max_results,
+            include_images=include_images,
             include_answer=True,
-            max_results=3
+            include_raw_content=include_raw_content
         )
         
         return [await process_search_results(results)]
@@ -156,7 +211,8 @@ async def main():
             )
     except Exception as e:
         logger.error(f"Server failed: {str(e)}")
-        raise
+    finally:
+        logger.info("Server shutting down")
 
 if __name__ == "__main__":
     import asyncio
