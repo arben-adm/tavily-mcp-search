@@ -2,6 +2,7 @@
 
 I've created a powerful Model Context Protocol (MCP) Server powered by the Tavily API. With this, you can get high-quality, reliable information from business, news, finance, and politics - all through a robust and developer-friendly interface.
 
+[![smithery badge](https://smithery.ai/badge/mcp-tavily-search)](https://smithery.ai/server/mcp-tavily-search)
 [![Tavily Search Agent MCP Server](https://glama.ai/mcp/servers/p0w4whs3l4/badge)](https://glama.ai/mcp/servers/p0w4whs3l4)
 [![CI](https://github.com/your-username/mcp-tavily-search/workflows/CI/badge.svg)](https://github.com/your-username/mcp-tavily-search/actions)
 [![codecov](https://codecov.io/gh/your-username/mcp-tavily-search/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/mcp-tavily-search)
@@ -20,6 +21,15 @@ In today's fast-paced digital landscape, I recognized the need for quick access 
 
 ## 🚀 Quick Start
 
+### Installing via Smithery
+
+To install Tavily Search for Claude Desktop automatically via [Smithery](https://smithery.ai/server/mcp-tavily-search):
+
+```bash
+npx -y @smithery/cli install mcp-tavily-search --client claude
+```
+
+### Installing Manually
 Here's how you can get up and running with my project in minutes:
 
 ```bash
